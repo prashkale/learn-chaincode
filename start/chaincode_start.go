@@ -41,8 +41,8 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string
 		return nil, errors.New("############Incorrect number  of arguments. Expecting 1")
 	}
 	stub.PutState("Initial_Amount", []byte(args[0]))
-	stub.PutState("account_Namet", []byte(args[1]))
-	stub.PutState("timeStamp", []byte(args[2]))
+	stub.PutState("Account_Name", []byte(args[1]))
+	stub.PutState("TimeStamp", []byte(args[2]))
 	fmt.Println(" Data writing done " )
 	return nil, nil
 }
