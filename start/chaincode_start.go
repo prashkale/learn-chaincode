@@ -97,5 +97,5 @@ func (t *SimpleChaincode) sendMoney(stub shim.ChaincodeStubInterface,args []stri
 		fmt.Printf("SAVE_CHANGES: Error storing payment record: %s", err); 
 		return nil, errors.New("Error storing payment record") 
 	}
-	return nil, errors.New("############Received unknown function query: "+string(amount[:]))
+	return nil, nil
 }
