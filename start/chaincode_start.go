@@ -36,15 +36,14 @@ func main() {
 
 // Init resets all the things
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-fmt.Println("Init is running " )
-
+	fmt.Println("Init is running " )
 	if len(args) != 3 {
 		return nil, errors.New("############Incorrect number  of arguments. Expecting 1")
 	}
- stub.PutState("Initial_Amount", []byte(args[0]))
-  stub.PutState("account_Namet", []byte(args[1]))
-   stub.PutState("timeStamp", []byte(args[2]))
-  fmt.Println(" Data writing done " )
+	stub.PutState("Initial_Amount", []byte(args[0]))
+	stub.PutState("account_Namet", []byte(args[1]))
+	stub.PutState("timeStamp", []byte(args[2]))
+	fmt.Println(" Data writing done " )
 	return nil, nil
 }
 
@@ -56,10 +55,9 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 	if function == "init" {													//initialize the chaincode state, used as reset
 		return t.Init(stub, "init", args)
 	}else if function == "sendMoney"{
-	return t.sendMoney(stub, args);
+		return t.sendMoney(stub, args);
     }	
 	fmt.Println("############invoke did not find Nagmani func: " + function)					//error
-
 	return nil, errors.New("############Received unknown function invocation: " + function)
 }
 
@@ -72,7 +70,7 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 		fmt.Println("########################hi Nagmani " + function)						//error
 		return nil, nil;
 	} else if  function == "checkBalance"   {
-	 return t.checkBalance(stub, args);
+		return t.checkBalance(stub, args);
 	}
 	fmt.Println("query  did not find func: " + function)						//error
 
@@ -80,18 +78,20 @@ func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function strin
 }
 //transfer money
 func (t *SimpleChaincode) checkBalance(stub shim.ChaincodeStubInterface,args []string) ([]byte, error) {
- //amount, err := stub.GetState(args[0]);
- amount, err := stub.GetState("Initial_Amount"); 
+	//amount, err := stub.GetState(args[0]);
+	amount, err := stub.GetState("Initial_Amount"); 
 	if err != nil { return nil, errors.New("Couldn't get attribute 'amount'. Error: "+string(amount[:]) + err.Error()) }
-	return amount, nil
+		return amount, nil
 }
 //transfer money
 func (t *SimpleChaincode) sendMoney(stub shim.ChaincodeStubInterface,args []string) ([]byte  , error) {
 	amount, err := stub.GetState("Initial_Amount");
-	var balAmt, transferAmt int;
-	balAmt, err = strconv.ParseInt(string(amount[:]),0,32);
-	transferAmt, err = strconv.ParseInt(args[0],0, 32);
-    err = stub.PutState("Initial_Amount", []byte(strconv.Itoa( balAmt- transferAmt)));
+	var balAmt, transferAmt int64;
+	var newBalance []byte;
+	balAmt, err = strconv.ParseInt(string(amount[:]),0,64);
+	transferAmt, err = strconv.ParseInt(args[0],0, 64);
+	newBalance = []byte(strconv.Itoa( int(balAmt) - int(transferAmt)))
+    err = stub.PutState("Initial_Amount", newBalance);
 
 	if err != nil { 
 		fmt.Printf("SAVE_CHANGES: Error storing payment record: %s", err); 
