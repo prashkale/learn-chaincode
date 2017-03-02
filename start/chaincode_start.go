@@ -61,7 +61,7 @@ func main() {
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 fmt.Println("Init is running " )
 
-	if len(args) != 3 {
+	if len(args) != 1 {
 		return nil, errors.New("############Incorrect number  of arguments. Expecting 1")
 	}
 	stub.PutState("Default_Open_Balance", []byte(args[0]))
@@ -145,18 +145,40 @@ return bytes, nil
 }
 //transfer money
 func (t *SimpleChaincode) sendMoney(stub shim.ChaincodeStubInterface,args []string) ([]byte  , error) {
-	amount, err := stub.GetState("Default_Open_Balance");
+//retrieve Account Details
+	var a Account
+	var amount string
+        a, err :=t.retrieve_Account(stub, args[0]);
+	amount = a.Balance;
+	
+	//make payment
 	payStatusCd,uUID, err := t.makePayment(args);
 	if err != nil {
 		fmt.Printf("Make Payment Status: Error storing payment record: %s", payStatusCd[:]); 
 		fmt.Printf("Make Payment Status ID : Error storing payment record: %s", uUID[:]); 
 	}
+	
 	var balAmt, transferAmt int64;
 	var newBalance []byte;
 	balAmt, err = strconv.ParseInt(string(amount[:]),0,64);
-	transferAmt, err = strconv.ParseInt(args[0],0, 64);
+	transferAmt, err = strconv.ParseInt(args[2],0, 64);
 	newBalance = []byte(strconv.Itoa( int(balAmt) - int(transferAmt)))
-	err = stub.PutState("Initial_Amount", newBalance);
+	
+   //store  new balance in Ledger
+   var acc Account
+	acountId         := "\"AccountId\":\""+args[0]+"\", "							// Variables to define the JSON
+	acountName         := "\"AccountName\":\""+args[1]+"\", "	
+	balance           := "\"Balance\":\""+string(newBalance[:])+"\", "	
+	timestamp          := "\"TimeStamp\":\""+args[3]+"\""
+	account_json := "{"+acountId+acountName+balance+timestamp+"}" 	// Concatenates the variables to create the total JSON 
+    err = json.Unmarshal([]byte(account_json), &acc)
+	bytes, err := json.Marshal(acc)
+	err = stub.PutState(a.AccountId, bytes)
+
+	if err != nil { 
+	fmt.Printf("SAVE_CHANGES: Error storing Account record: %s", err); 
+	return nil, errors.New("Error storing Account record") 
+	}
 
 	//err = stub.PutState("Initial_Amount", []byte(strconv.Itoa( balAmt- transferAmt)));
 	
@@ -234,10 +256,10 @@ func (t *SimpleChaincode) makePayment(args []string) (string, string, error){
 	//payment.Message = r.FormValue("message");
 
 	
-	payment.Destination = args[0];
-	payment.SourceAmount = args[1];
+	payment.Destination = args[1];
+	payment.SourceAmount = args[2];
 	payment.DestinationAmount = args[2];
-	payment.Message = args[3];
+	payment.Message = "Send Money";
 	
 	// try Option 1
 	//bufObj := new(bytes.Buffer)
